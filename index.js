@@ -58,6 +58,71 @@ app.get('/api/campaigns', async (req, res) => {
   }
 });
 
+
+app.delete('/api/campaigns/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    await Campaign.findByIdAndDelete(id);
+    res.json({ message: 'تم حذف الحملة بنجاح' });
+  } catch (error) {
+    res.status(500).json({ error: 'فشل حذف الحملة' });
+  }
+});
+
+// 4. تعديل حملة (Update) - مثلاً لتحديث المبلغ المجمّع أو الموافقة عليها
+app.put('/api/campaigns/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const updatedCampaign = await Campaign.findByIdAndUpdate(id, req.body, { new: true });
+    res.json(updatedCampaign);
+  } catch (error) {
+    res.status(500).json({ error: 'فشل تحديث الحملة' });
+  }
+});
+
+// 1. تعريف شكل بيانات المستخدم (Schema)
+const userSchema = new mongoose.Schema({
+  name: String,
+  email: String,
+  role: { type: String, default: 'متبرع' }, // مدير، متبرع، متطوع
+  status: { type: String, default: 'نشط' }, // نشط، محظور
+  date: { type: Date, default: Date.now }
+});
+
+const User = mongoose.model('User', userSchema);
+
+// 2. روابط التحكم بالمستخدمين (Routes)
+
+// جلب كل المستخدمين
+app.get('/api/users', async (req, res) => {
+  try {
+    const users = await User.find().sort({ date: -1 }); // الأحدث أولاً
+    res.json(users);
+  } catch (error) {
+    res.status(500).json({ error: 'فشل جلب المستخدمين' });
+  }
+});
+
+// إضافة مستخدم جديد
+app.post('/api/users', async (req, res) => {
+  try {
+    const newUser = new User(req.body);
+    await newUser.save();
+    res.json(newUser);
+  } catch (error) {
+    res.status(500).json({ error: 'فشل إضافة المستخدم' });
+  }
+});
+
+// حذف مستخدم
+app.delete('/api/users/:id', async (req, res) => {
+  try {
+    await User.findByIdAndDelete(req.params.id);
+    res.json({ message: 'تم حذف المستخدم' });
+  } catch (error) {
+    res.status(500).json({ error: 'فشل الحذف' });
+  }
+});
 // 3. جلب تفاصيل حملة واحدة (GET by ID)
 // ملاحظة: React حالياً يستخدم ID رقمي (1, 2)، بينما MongoDB يستخدم ID نصي طويل (_id)
 // سنقوم بتحديث React لاحقاً ليتعامل مع _id، لكن هذا الكود جاهز للمستقبل
@@ -95,5 +160,6 @@ app.post('/api/campaigns', async (req, res) => {
 app.listen(PORT, () => {
   console.log(`🚀 السيرفر يعمل الآن على الرابط: http://localhost:${PORT}`);
 });
+
 
 module.exports = app;
