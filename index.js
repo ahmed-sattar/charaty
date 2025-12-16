@@ -95,3 +95,5 @@ app.post('/api/campaigns', async (req, res) => {
 app.listen(PORT, () => {
   console.log(`🚀 السيرفر يعمل الآن على الرابط: http://localhost:${PORT}`);
 });
+
+module.exports = app;
